@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Configuration;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace AuthApp.API.Helpers
@@ -29,5 +30,6 @@ namespace AuthApp.API.Helpers
 
             return CryptographicOperations.FixedTimeEquals(hashToCompare, Convert.FromHexString(hash));
         }
+
     }
 }

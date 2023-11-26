@@ -11,9 +11,9 @@ namespace AuthApp.API.Models
         public string LastName { get; set; }
         public string Email { get; set; }
         public string Username { get; set; }
+        public enum R  
         public string? Password { get; set; }
         public string? Token { get; set; }
-
         //Adding foriegn key references
         public UserSecret? SecretSalt { get; set; }
     }
@@ -25,5 +25,12 @@ namespace AuthApp.API.Models
         public int UserId { get; set; }
         public string? secretSalt { get; set; }
         public User User { get; set; } = null!;
+    }
+
+    public enum Roles
+    {
+        User,
+        Admin,
+        Visitor
     }
 }

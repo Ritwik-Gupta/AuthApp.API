@@ -3,6 +3,7 @@ using AuthApp.API.DTO;
 using AuthApp.API.Helpers;
 using AuthApp.API.MapperService;
 using AuthApp.API.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -61,12 +62,27 @@ namespace AuthApp.API.Controllers
 
                     if(_hasher.VerifyPassword(userCreds.Password, user.Password, Convert.FromBase64String(userSecret.secretSalt)))
                     {
-                        return Ok(new { Message = "User logged in successfully" });
+                        var token = ManageToken.GenerateJSONWebToken(user);
+
+                        return Ok(new
+                        {
+                            Message = "User logged in successfully",
+                            Token = token
+                        });
                     }
                 }
                 return BadRequest(new { Message = "Invalid username or password" });
             }
             return BadRequest(new { Message = "Invalid request" });
+        }
+
+        [Authorize]
+        [HttpGet("get-users")]
+        public async Task<IActionResult> AllUsers()
+        {
+            var users = await _context.Users.Select(x => x.Username).ToListAsync();
+
+            return Ok(users);
         }
     }
 }

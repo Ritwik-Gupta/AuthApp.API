@@ -1,5 +1,10 @@
 using AuthApp.API.Domain;
 using AuthApp.API.Helpers;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using System.Configuration;
+using ConfigurationManager = System.Configuration.ConfigurationManager;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +16,22 @@ builder.Services.AddDbContext<AuthAppDbContext>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+//Configure Jwt Token
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["JwtSecrets:Issuer"],
+            ValidAudience = builder.Configuration["JwtSecrets:Issuer"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSecrets:SecretKey"]))
+        };
+    });
 
 builder.Services.AddCors(options =>
 {
@@ -35,6 +56,7 @@ app.UseHttpsRedirection();
 
 app.UseCors("AuthAppPolicy");
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

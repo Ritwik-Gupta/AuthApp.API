@@ -31,10 +31,10 @@ namespace AuthApp.API.Domain
             //Map entity to table
             modelBuilder.Entity<User>().ToTable("Users");
 
-            modelBuilder.Entity<User>().
-                HasOne(e => e.SecretSalt).
-                WithOne(e => e.User).
-                HasForeignKey<UserSecret>(e => e.UserId)
+            modelBuilder.Entity<User>()
+                .HasOne(e => e.SecretSalt)
+                .WithOne(e => e.User)
+                .HasForeignKey<UserSecret>(e => e.UserId)
                 .IsRequired();
         }
     }

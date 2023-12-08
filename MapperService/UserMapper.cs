@@ -5,7 +5,7 @@ namespace AuthApp.API.MapperService
 {
     public static class UserMapper
     {
-        public static User MapFromDTO(UserDTO userDTO)
+        public static User MapUserFromDTO(UserDTO userDTO)
         {
             if (userDTO != null)
             {
@@ -16,6 +16,7 @@ namespace AuthApp.API.MapperService
                     Email = userDTO.email,
                     Username = userDTO.username,
                     Password = userDTO.password,
+                    RoleId =  RoleMapper.MapRoleFromDTO(userDTO.role)
                 };
             }
             return null;

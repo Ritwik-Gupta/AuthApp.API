@@ -17,6 +17,7 @@ namespace AuthApp.API.Domain
 
         public DbSet<User> Users { get; set; }
         public DbSet<UserSecret> UsersSecrets { get; set; }
+        public DbSet<Role> Roles { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -26,7 +27,7 @@ namespace AuthApp.API.Domain
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             //Creating default schema
-            modelBuilder.HasDefaultSchema("AuthAppDB");
+            modelBuilder.HasDefaultSchema("dbo");
 
             //Map entity to table
             modelBuilder.Entity<User>().ToTable("Users");
@@ -36,6 +37,25 @@ namespace AuthApp.API.Domain
                 .WithOne(e => e.User)
                 .HasForeignKey<UserSecret>(e => e.UserId)
                 .IsRequired();
+
+            modelBuilder.Entity<User>()
+                .Property(e => e.RoleId)
+                .HasConversion<int>();
+
+            modelBuilder.Entity<Role>()
+                .Property(e => e.RoleId)
+                .HasConversion<int>();
+
+            modelBuilder.Entity<Role>()
+                .HasData(
+                    Enum.GetValues(typeof(Roles))
+                    .Cast<Roles>()
+                    .Select(e => new Role()
+                    {
+                        RoleId = e,
+                        RoleName = e.ToString()
+                    })
+                );           
         }
     }
 }

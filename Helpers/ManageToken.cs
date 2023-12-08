@@ -1,6 +1,7 @@
 ﻿using AuthApp.API.Models;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 using ConfigurationManager = System.Configuration.ConfigurationManager;
 
@@ -17,11 +18,28 @@ namespace AuthApp.API.Helpers
 
             var token = new JwtSecurityToken(configuration.GetValue<string>("JwtSecrets:Issuer"),
               configuration.GetValue<string>("JwtSecrets:Issuer"),
-              null,
-              expires: DateTime.Now.AddMinutes(120),
+              claims: new[] { new Claim(ClaimTypes.Role, userInfo.RoleId.ToString()) },
+              expires: DateTime.Now.AddMinutes(2), //token valid for 60 minutes after login
               signingCredentials: credentials);
+
+            //Console.WriteLine(token.ValidTo.ToShortTimeString());
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
+        public static string GenerateRefreshToken()
+        {
+            //generate a random string 
+            var allChar = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            var random = new Random();
+            var resultToken = new string(
+               Enumerable.Repeat(allChar, 8)
+               .Select(token => token[random.Next(token.Length)]).ToArray());
+
+            string authToken = resultToken.ToString();
+
+            return authToken;
+        }
+
     }
 }

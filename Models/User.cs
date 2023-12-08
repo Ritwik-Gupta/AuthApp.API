@@ -11,9 +11,11 @@ namespace AuthApp.API.Models
         public string LastName { get; set; }
         public string Email { get; set; }
         public string Username { get; set; }
-        public enum R  
+        public Roles? RoleId { get; set; }
+        //public Role Role { get; set; }
         public string? Password { get; set; }
         public string? Token { get; set; }
+        public int IsDeleted { get; set; }
         //Adding foriegn key references
         public UserSecret? SecretSalt { get; set; }
     }
@@ -27,10 +29,18 @@ namespace AuthApp.API.Models
         public User User { get; set; } = null!;
     }
 
-    public enum Roles
+    public class Role
     {
-        User,
-        Admin,
-        Visitor
+        public Roles RoleId { get; set; }
+        public string RoleName { get; set; }
+
+        public List<User> Users { get; set; }
+    }
+
+    public enum Roles : int
+    {
+        User = 0,
+        Admin = 1,
+        Visitor = 2
     }
 }

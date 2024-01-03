@@ -7,12 +7,11 @@ namespace AuthApp.API.Models
     {
         [Key]
         public int Id { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string Email { get; set; }
-        public string Username { get; set; }
-        public Roles? RoleId { get; set; }
-        //public Role Role { get; set; }
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
+        public string? Email { get; set; }
+        public string? Username { get; set; }
+        public Roles RoleId { get; set; }
         public string? Password { get; set; }
         public string? Token { get; set; }
         public int IsDeleted { get; set; }
@@ -32,9 +31,9 @@ namespace AuthApp.API.Models
     public class Role
     {
         public Roles RoleId { get; set; }
-        public string RoleName { get; set; }
+        public string? RoleName { get; set; }
 
-        public List<User> Users { get; set; }
+        public List<User>? Users { get; set; }
     }
 
     public enum Roles : int

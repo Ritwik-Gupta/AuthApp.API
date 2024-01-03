@@ -5,13 +5,16 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Configuration;
 using ConfigurationManager = System.Configuration.ConfigurationManager;
+using AuthApp.API.Repository.Users;
+using AuthApp.API.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
 builder.Services.AddSingleton<PasswordHasher>();
+builder.Services.AddScoped<IUsersRepository, UsersRepository>();
+builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 builder.Services.AddDbContext<AuthAppDbContext>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

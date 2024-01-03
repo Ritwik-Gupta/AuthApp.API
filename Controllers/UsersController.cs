@@ -3,13 +3,12 @@ using AuthApp.API.DTO;
 using AuthApp.API.Helpers;
 using AuthApp.API.MapperService;
 using AuthApp.API.Models;
+using AuthApp.API.Repository.Users;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Primitives;
-using System.Text;
-using System.Xml;
+
 
 namespace AuthApp.API.Controllers
 {
@@ -17,12 +16,13 @@ namespace AuthApp.API.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly AuthAppDbContext _context;
         private readonly PasswordHasher _hasher;
-        public UsersController(AuthAppDbContext dbContext, PasswordHasher hasher)
+        private readonly IUsersRepository _usersRepo;
+
+        public UsersController(PasswordHasher hasher, IUsersRepository usersRepo)
         {
-            _context = dbContext;
             _hasher = hasher;
+            _usersRepo = usersRepo;
         }
 
         [HttpPost("add-user")]
@@ -30,12 +30,10 @@ namespace AuthApp.API.Controllers
         {
             if (user != null)
             {
-                var mappedUser = UserMapper.MapUserFromDTO(user);
+                var mappedUser = UserMapper.MapFromUserDTO(user);
 
-                if(_context.Users.Any(x => x.Username == mappedUser.Username))
-                {
+                if(await _usersRepo.IsUsernameAlreadyTaken(user.Username))
                     return BadRequest("Username already taken");
-                }
 
                 //hash password before saving
                 mappedUser.Password = _hasher.HashPasword(mappedUser.Password, out byte[] hash);
@@ -43,8 +41,8 @@ namespace AuthApp.API.Controllers
                 {
                     secretSalt = Convert.ToBase64String(hash)
                 };
-                await _context.Users.AddAsync(mappedUser);
-                await _context.SaveChangesAsync();
+
+                await _usersRepo.AddUser(mappedUser);
 
                 return Ok(new { Message = "Used added successfully"});
             }
@@ -52,15 +50,15 @@ namespace AuthApp.API.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] UserLogin userCreds)
+        public async Task<IActionResult> Login([FromBody] UserDTO userCreds)
         {
             if(userCreds != null)
             {
-                var user = await _context.Users.FirstOrDefaultAsync(x => x.Username.ToLower() == userCreds.Username.ToLower() && x.IsDeleted == 0);
+                var user = await _usersRepo.GetUserByUsername(userCreds.Username);
 
                 if(user != null)
                 {
-                    var userSecret = await _context.UsersSecrets.FirstOrDefaultAsync(x => x.UserId == user.Id);
+                    var userSecret = await _usersRepo.GetUserSerets(user.Id);
 
                     if(_hasher.VerifyPassword(userCreds.Password, user.Password, Convert.FromBase64String(userSecret.secretSalt)))
                     {
@@ -68,8 +66,7 @@ namespace AuthApp.API.Controllers
                         var refreshToken = ManageToken.GenerateRefreshToken();
 
                         //update the refresh token in the users table
-                        user.Token = refreshToken;
-                        await _context.SaveChangesAsync();
+                        await _usersRepo.UpdateRefreshToken(user.Id, refreshToken);
 
                         return Ok(new
                         {
@@ -91,17 +88,10 @@ namespace AuthApp.API.Controllers
         [HttpGet("get-users")]
         public async Task<IActionResult> AllUsers()
         {
-            var users = await _context.Users.Where(x => x.IsDeleted == 0).Select(x => new
-                {
-                    id = x.Id,
-                    fname = x.FirstName,
-                    lname = x.LastName,
-                    email = x.Email,
-                    username = x.Username,
-                    role = x.RoleId.ToString()
-                }).ToListAsync();
+            var users = await _usersRepo.GetAllUsers();
+            var mappedUsers = users.AsQueryable().Select(_ => UserMapper.MapToUserViewDTO(_));
 
-            return Ok(users);
+            return Ok(mappedUsers);
         }
 
         [Authorize(Roles = "User,Admin,Visitor")]
@@ -109,17 +99,10 @@ namespace AuthApp.API.Controllers
         public async Task<IActionResult> GetProfileDetailsforEdit(int userId)
         {
             if(userId > 0)
-            {
-                var user = await  _context.Users.Where(x => x.Id == userId && x.IsDeleted == 0).Select(x => new
-                {
-                    id = x.Id,
-                    fname = x.FirstName,
-                    lname = x.LastName,
-                    email = x.Email,
-                    username = x.Username,
-                    role = x.RoleId.ToString()
-                }).FirstOrDefaultAsync();
-                return Ok(user);
+            { 
+                var user = await _usersRepo.GetUserById(userId);
+                var mappedUser = MapperService.UserMapper.MapToUserViewDTO(user);
+                return Ok(mappedUser);
             }
             return BadRequest();
         }
@@ -130,18 +113,16 @@ namespace AuthApp.API.Controllers
         {
             if(userObj != null)
             {
-                var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userObj.id && x.IsDeleted == 0);
+                //var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userObj.id && x.IsDeleted == 0);
+                var user = await _usersRepo.GetUserById(userObj.Id);
 
                 if (user == null)
                     return BadRequest("User doesnt exist");
 
-                user.FirstName = userObj.fname;
-                user.LastName = userObj.lname;
-                user.Email = userObj.email;
-                //user.Username = userObj.username;
-                user.RoleId = RoleMapper.MapRoleFromDTO(userObj.role);
+                var mappedUser = UserMapper.MapFromUserViewDTO(userObj);
+
+                await _usersRepo.UpdateUser(mappedUser);
       
-                await _context.SaveChangesAsync();
                 return Ok(new { Message = "User details updated successfully" });
             }
             return NotFound("User doesnt exist");
@@ -153,16 +134,10 @@ namespace AuthApp.API.Controllers
         {
             if (userId > 0)
             {
-                var user = await _context.Users.Where(x => x.Id == userId && x.IsDeleted == 0).Select(x => new
-                {
-                    id = x.Id,
-                    fname = x.FirstName,
-                    lname = x.LastName,
-                    email = x.Email,
-                    username = x.Username,
-                    role = x.RoleId.ToString()
-                }).FirstOrDefaultAsync();
-                return Ok(user);
+                var user = await _usersRepo.GetUserById(userId);
+                var mappedUser = UserMapper.MapToUserViewDTO(user);
+
+                return Ok(mappedUser);
             }
             return BadRequest("Invalid request");
         }
@@ -173,16 +148,8 @@ namespace AuthApp.API.Controllers
         {
             if(userId > 0)
             {
-                var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId && x.IsDeleted == 0);
-
-                if(user != null)
-                {
-                    user.IsDeleted = 1;
-                    await _context.SaveChangesAsync();
-
-                    return Ok(new { Message = "User deleted successfully" });
-                }
-                return BadRequest("User doesn't exist");
+                await _usersRepo.RemoveUser(userId);
+                return Ok("User deleted successfully");
             }
             return BadRequest("Invalid request");
         }
@@ -197,7 +164,8 @@ namespace AuthApp.API.Controllers
 
             if(refreshToken[0] != string.Empty)
             {
-                var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId && x.Token == refreshToken[0] && x.IsDeleted == 0);
+                //var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId && x.IsDeleted == 0);
+                var user = await _usersRepo.GetUserById(userId);
 
                 if(user != null)
                 {
@@ -208,8 +176,7 @@ namespace AuthApp.API.Controllers
                         var refreshTokenNew = ManageToken.GenerateRefreshToken();
 
                         //update the refresh token in the users table
-                        user.Token = refreshTokenNew;
-                        await _context.SaveChangesAsync();
+                        await _usersRepo.UpdateRefreshToken(user.Id, refreshTokenNew);
 
                         return Ok(new {
                             Message = "Session refreshed successfully",

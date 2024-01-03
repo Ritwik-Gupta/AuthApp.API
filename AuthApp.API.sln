@@ -3,7 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33502.453
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthApp.API", "AuthApp.API.csproj", "{FC59A60B-AFF1-4D03-B650-C35FD56AE3ED}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthApp.API", "AuthApp.API.csproj", "{FC59A60B-AFF1-4D03-B650-C35FD56AE3ED}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C451847C-AA1D-4FA1-8DA7-1233B5AD311A}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

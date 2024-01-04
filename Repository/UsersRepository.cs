@@ -15,7 +15,7 @@ namespace AuthApp.API.Repository.Users
 
         public async Task<IEnumerable<User>> GetAllUsers()
         {
-            return await _context.Users.Where(_ => _.IsDeleted != 0).ToListAsync();
+            return await _context.Users.Where(_ => _.IsDeleted == 0).ToListAsync();
         }
 
         public async Task AddUser(User user)
@@ -36,7 +36,7 @@ namespace AuthApp.API.Repository.Users
 
         public async Task UpdateUser(User userObj)
         {
-            User user = await _context.Users.FirstAsync(_ => _.Id == userObj.Id && userObj.IsDeleted != 1);
+            User user = await _context.Users.FirstAsync(_ => _.Id == userObj.Id && userObj.IsDeleted == 0);
 
             if (user != null)
             {

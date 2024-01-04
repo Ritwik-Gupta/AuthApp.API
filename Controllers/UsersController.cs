@@ -41,7 +41,6 @@ namespace AuthApp.API.Controllers
                 {
                     secretSalt = Convert.ToBase64String(hash)
                 };
-
                 await _usersRepo.AddUser(mappedUser);
 
                 return Ok(new { Message = "Used added successfully"});

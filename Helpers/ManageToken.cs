@@ -19,7 +19,7 @@ namespace AuthApp.API.Helpers
             var token = new JwtSecurityToken(configuration.GetValue<string>("JwtSecrets:Issuer"),
               configuration.GetValue<string>("JwtSecrets:Issuer"),
               claims: new[] { new Claim(ClaimTypes.Role, userInfo.RoleId.ToString()) },
-              expires: DateTime.Now.AddMinutes(2), //token valid for 60 minutes after login
+              expires: DateTime.Now.AddMinutes(60), //token valid for 60 minutes after login
               signingCredentials: credentials);
 
             //Console.WriteLine(token.ValidTo.ToShortTimeString());

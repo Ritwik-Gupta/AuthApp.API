@@ -22,6 +22,7 @@ namespace AuthApp.API.MapperService
         {
             return new User()
             {
+                Id = userDTO.Id,
                 FirstName = userDTO.Fname,
                 LastName = userDTO.Lname,
                 Email = userDTO.Email,

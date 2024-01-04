@@ -12,7 +12,7 @@ namespace AuthApp.API.Repository
             this._context = context;
         }
 
-        public async void UpdateRefreshToken(int userId, string refreshToken)
+        public async Task UpdateRefreshToken(int userId, string refreshToken)
         {
             var user = await _context.Users.FirstAsync(_ => _.Id == userId);
             user.Token = refreshToken;
